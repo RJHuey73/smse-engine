@@ -1,0 +1,31 @@
+{
+  "ES": {
+    "cot_raw": {"report_date": "2026-04-25T00:00:00Z", "market_code": "ES", "noncommercial_long": 312400, "noncommercial_short": 89200, "commercial_long": 210300, "commercial_short": 401500, "open_interest": 2850000,
+      "historical_net": [198000, 210000, 225000, 215000, 230000, 218000, 205000, 223200, 234100, 210500, 198700, 215400, 228600, 241300, 235000, 220100, 243500, 223200], "data_age_days": 5},
+    "options_raw": {"underlying_price": 5118, "chain": [
+      {"strike": 4900, "expiry": "2026-05-16", "call_oi": 8200, "put_oi": 22400, "call_gamma": 0.0012, "put_gamma": 0.0018},
+      {"strike": 4950, "expiry": "2026-05-16", "call_oi": 11300, "put_oi": 18900, "call_gamma": 0.0021, "put_gamma": 0.0024},
+      {"strike": 5000, "expiry": "2026-05-16", "call_oi": 24500, "put_oi": 31200, "call_gamma": 0.0038, "put_gamma": 0.0041},
+      {"strike": 5050, "expiry": "2026-05-16", "call_oi": 38700, "put_oi": 29100, "call_gamma": 0.0062, "put_gamma": 0.0055},
+      {"strike": 5100, "expiry": "2026-05-16", "call_oi": 44200, "put_oi": 18400, "call_gamma": 0.0078, "put_gamma": 0.0044},
+      {"strike": 5150, "expiry": "2026-05-16", "call_oi": 51300, "put_oi": 11200, "call_gamma": 0.0091, "put_gamma": 0.0029},
+      {"strike": 5200, "expiry": "2026-05-16", "call_oi": 38100, "put_oi": 8900, "call_gamma": 0.0067, "put_gamma": 0.0018},
+      {"strike": 5250, "expiry": "2026-05-16", "call_oi": 22400, "put_oi": 5100, "call_gamma": 0.0041, "put_gamma": 0.0011}]},
+    "etf_flows_raw": {"ticker": "SPY", "date": "2026-04-30T00:00:00Z", "inflow": 2840000000, "outflow": 1920000000, "shares_outstanding": 450000000},
+    "price_raw": {"close": 5118, "high": 5134, "low": 5089, "open": 5097, "volume": 2340000, "moving_averages": {"ma20": 5042, "ma50": 4998, "ma200": 4731}}
+  },
+  "NQ": {
+    "cot_raw": {"report_date": "2026-04-25T00:00:00Z", "market_code": "NQ", "noncommercial_long": 98400, "noncommercial_short": 112800, "commercial_long": 189200, "commercial_short": 142100, "open_interest": 890000,
+      "historical_net": [12000, -4200, 8100, -11300, 3200, -8900, 2100, -14400, -11200, -9800, -7100, -13200, -5400, -15100, -8700, -12400, -14300, -14400], "data_age_days": 5},
+    "options_raw": {"underlying_price": 17842, "chain": [
+      {"strike": 17000, "expiry": "2026-05-16", "call_oi": 4100, "put_oi": 18200, "call_gamma": 0.00008, "put_gamma": 0.00021},
+      {"strike": 17200, "expiry": "2026-05-16", "call_oi": 5800, "put_oi": 22400, "call_gamma": 0.00014, "put_gamma": 0.00031},
+      {"strike": 17500, "expiry": "2026-05-16", "call_oi": 9200, "put_oi": 28100, "call_gamma": 0.00028, "put_gamma": 0.00042},
+      {"strike": 17800, "expiry": "2026-05-16", "call_oi": 18400, "put_oi": 24200, "call_gamma": 0.00052, "put_gamma": 0.00049},
+      {"strike": 18000, "expiry": "2026-05-16", "call_oi": 31200, "put_oi": 14100, "call_gamma": 0.00071, "put_gamma": 0.00031},
+      {"strike": 18250, "expiry": "2026-05-16", "call_oi": 28900, "put_oi": 8400, "call_gamma": 0.00064, "put_gamma": 0.00019},
+      {"strike": 18500, "expiry": "2026-05-16", "call_oi": 19100, "put_oi": 4200, "call_gamma": 0.00041, "put_gamma": 0.00009}]},
+    "etf_flows_raw": {"ticker": "QQQ", "date": "2026-04-30T00:00:00Z", "inflow": 890000000, "outflow": 1240000000, "shares_outstanding": 248000000},
+    "price_raw": {"close": 17842, "high": 18021, "low": 17698, "open": 17920, "volume": 1180000, "moving_averages": {"ma20": 17991, "ma50": 18234, "ma200": 19108}}
+  }
+}
