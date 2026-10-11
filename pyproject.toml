@@ -25,6 +25,8 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+# Vendored source-of-truth file; must stay byte-identical to the Spec repo copy.
+extend-exclude = [".canon"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]

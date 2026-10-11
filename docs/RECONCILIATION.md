@@ -33,6 +33,6 @@ The status of everything below is **STAGED**: T1 findings that await T0. Nothing
 
 - No Canon/Airtable/Supabase writes. The Registry is in-memory only.
 - No Make.com wiring: WO-AUTO-001A-MARKET is OPEN and gated.
-- No CI workflow yet. CANON-360 action pins need the vendored `.canon/canon_lint.py`, which arrives with repo creation.
+- CI: `ci.yml` (ruff, mypy strict, pytest on 3.11–3.13, JS-oracle golden diff) + `canon-lint.yml` running the vendored `.canon/canon_lint.py` (CANON_REVISION 2026.07.04, copied from the Spec repo source of truth).
 
 ={∆§/π}™
