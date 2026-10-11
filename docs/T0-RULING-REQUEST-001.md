@@ -25,13 +25,19 @@ Engine v0 behavior until a ruling lands: **as ratified / dry-run parity, tagged 
 
 The threshold almost never binds. In practice, `flows.bias` is `sign(net_flow)`.
 
-| Option | Change | Contract impact | Parity |
-|---|---|---|---|
-| **A1 (recommended)** | `flow_threshold_usd = 0.001 × shares_outstanding × close` | None. `close` is already in `price_raw`. The 011 field keeps its name, and its value becomes USD. | Breaks the golden output and needs a re-baseline. |
-| A2 | Keep as ratified. Record the units mismatch as a known limitation. | None | Kept |
-| A3 | Feed flows in shares (`net_flow_shares = net_usd / close`) | Changes the 012 `etf_flows_raw` contract | Breaks |
+**Constraint (observed).** Converting the threshold to dollars needs the **ETF's** price.
+`price_raw.close` is the underlying asset's price (ES at 5118), not the ETF's (SPY at roughly 511).
+`etf_flows_raw` carries no price field. Using `price_raw.close` overstates the threshold about 10×:
+SPY would get $2.30B against a $920M flow, and QQQ $4.42B against −$350M. Both would flip to
+`Mixed`, and NQ crowding would flip to `NotCrowded`. That option is rejected.
 
-Recommended path: ship A1 as a **config flag that defaults off**. The default flips to A1 only with this ruling plus an addendum. Under A1 the fixture result does not change: SPY's threshold becomes about $2.3M against a $920M flow, so the bias stays `FlowLong`.
+| Option | Change | Contract impact | Effect on the fixture |
+|---|---|---|---|
+| **A1 (recommended)** | `flow_threshold_usd = 0.001 × shares_outstanding × etf_close` | **Additive to 012:** a new required `etf_flows_raw.etf_close`. The 011 field keeps its name, and its value becomes USD. | With illustrative ETF prices (SPY 511, QQQ 435, *hypothetical*), the thresholds are about $230M and $108M. Both biases are unchanged: FlowLong and FlowShort. |
+| A2 | Keep as ratified. Record the units mismatch as a known limitation. | None | Unchanged |
+| A3 | Feed flows in shares (`net_flow_shares = net_usd / etf_close`) | Changes the meaning of 012 `inflow`/`outflow` | Equivalent to A1, with more churn |
+
+Recommended path: ship A1 behind a **config flag that defaults off**. The new field stays optional while the flag is off. The default flips only with this ruling plus an addendum.
 
 - [ ] A1  - [ ] A2  - [ ] A3  - [ ] Other: ________
 
