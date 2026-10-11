@@ -10,7 +10,7 @@ The status of everything below is **STAGED**: T1 findings that await T0. Nothing
 | Notion: Canon Addendum v8.13.0 (2026-05-10), SFX-MARKET-015 | observed |
 | Drive: `smse-pipeline-dryrun.jsx.pdf` (T0-authorized 2026-04-30) | observed. This is the behavioural reference. |
 | Airtable Canon ID Registry | **unavailable**: HTTP 429, quota exhausted on 2026-10-11. Canon status is unverified against the registry. |
-| reporterAgent.ts v1.1 and reporterAgent.test.ts v1.1 | **not found** in Notion or Drive (searched 2026-10-11) |
+| reporterAgent.ts v1.1 and reporterAgent.test.ts v1.1 | **not found** (2026-10-11): Notion keyword search; Drive full-text for `reporterAgent`, `reporterAgent.test`, `SummaryRow` and `T2 bundle`; the dry run's parent folder `19lcpre8…`; all local repos. **Not searched:** Drive subfolders, T2 chat logs (Copilot session). |
 
 ## Open items for T0
 
@@ -28,6 +28,14 @@ The status of everything below is **STAGED**: T1 findings that await T0. Nothing
 | R-10 | Low | The dry-run trace hardcodes "0 stale COT flags". | Computed. |
 | R-11 | Info | MARKET-015 was ratified under a blanket "Ratify everything" directive, and its sweep thresholds are qualitative ("High", "Low"). | Not implemented. Not computable as written. |
 | R-12 | Info | `TrustState` values come from `shadowfox-sweep`; there is no CANON-204 enum source. | `T2-FLAGGED` (inferred). |
+
+## Status of T1 GO order (2026-10-11)
+
+1. Repo: **blocked**. The GitHub App gets a 403 on `create_repository` (same as Shadowfox-systems B-1). T0 creates `RJHuey73/smse-engine` (private, empty) by hand.
+2. Rulings: request drafted in `docs/T0-RULING-REQUEST-001.md`, awaiting T0.
+3. Flagged variant: waiting on step 2.
+4. reporterAgent.ts v1.1: not found (see evidence table). R-01 stays open, and the reporter stays provisional.
+5. Registry triage: blocked by the Airtable 429. Retry after the quota resets, and re-run the session-open queries first.
 
 ## Gates honoured
 
