@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import math
 from collections import OrderedDict
+from datetime import UTC, date, datetime
 from itertools import pairwise
 
 from smse_engine import constants as C
 from smse_engine._num import js_round, js_to_fixed
+from smse_engine.flags import DEFAULT_FLAGS, EngineFlags
 from smse_engine.schema import (
     CotBias,
     CotRaw,
@@ -20,6 +22,8 @@ from smse_engine.schema import (
     EtfFlowsRaw,
     ExtremeFlag,
     FlowBias,
+    FlowThresholdBasis,
+    GammaFlipSource,
     GammaRegime,
     Normalized,
     NormCot,
@@ -36,6 +40,10 @@ from smse_engine.schema import (
 
 class NormalizationError(ValueError):
     """Input cannot be normalized deterministically. Fail closed; never coerce."""
+
+
+class EtfPriceError(NormalizationError):
+    """A1: ETF close missing, invalid or stale. The pipeline excludes the asset rather than aborting."""
 
 
 def z_score(net: int, history: list[int]) -> float:
@@ -97,7 +105,15 @@ def gamma_flip(rows: list[tuple[float, float, float, float]]) -> int | None:
     return None
 
 
-def normalize_gamma(raw: OptionsRaw) -> NormGamma:
+def gamma_magnets(rows: list[tuple[float, float, float, float]], exclude_zero: bool) -> list[int]:
+    """Top strikes by |net GEX|, ascending. Ties keep the lower strike (rows are strike-ascending
+    and the sort is stable). C1 drops zero-GEX strikes and never pads below the count."""
+    candidates = [r for r in rows if r[1] != 0] if exclude_zero else rows
+    by_abs = sorted(candidates, key=lambda r: abs(r[1]), reverse=True)[: C.GAMMA_MAGNET_COUNT]
+    return sorted(js_round(r[0]) for r in by_abs)
+
+
+def normalize_gamma(raw: OptionsRaw, flags: EngineFlags = DEFAULT_FLAGS) -> NormGamma:
     rows = _net_gex_by_strike(raw)
     call_gex = sum(r[2] for r in rows)
     put_gex = sum(r[3] for r in rows)
@@ -105,30 +121,59 @@ def normalize_gamma(raw: OptionsRaw) -> NormGamma:
     total_gamma = js_to_fixed(call_gex + put_gex, 4)
 
     flip = gamma_flip(rows)
-    source = "interpolated"
+    source: GammaFlipSource = "interpolated"
     if flip is None:
-        flip = js_round(raw.underlying_price * C.GAMMA_FLIP_FALLBACK_COEFF)
-        source = "fallback"
+        if flags.null_gamma_flip:
+            source = "unavailable"
+        else:
+            flip = js_round(raw.underlying_price * C.GAMMA_FLIP_FALLBACK_COEFF)
+            source = "fallback"
 
     regime: GammaRegime = "LongGamma" if net_gamma > 0 else "ShortGamma" if net_gamma < 0 else "Neutral"
     vol: VolatilityNote = (
         "VolSuppressing" if regime == "LongGamma" else "VolAmplifying" if regime == "ShortGamma" else "Neutral"
     )
-    by_abs = sorted(rows, key=lambda r: abs(r[1]), reverse=True)[: C.GAMMA_MAGNET_COUNT]
-    magnets = sorted(js_round(r[0]) for r in by_abs)
     return NormGamma(
         total_gamma=total_gamma,
         net_gamma=net_gamma,
         regime=regime,
         gamma_flip_level=flip,
         gamma_flip_source=source,
-        gamma_magnets=magnets,
+        gamma_magnets=gamma_magnets(rows, exclude_zero=flags.magnet_key_levels),
         volatility_note=vol,
     )
 
 
-def normalize_flows(raw: EtfFlowsRaw, cot_bias: CotBias) -> NormFlows:
-    threshold = C.FLOW_THRESHOLD_COEFF * raw.shares_outstanding
+def _session(value: str, label: str) -> date:
+    try:
+        if "T" not in value:
+            return date.fromisoformat(value)
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise EtfPriceError(f"{label} is not ISO-8601: {value!r}") from exc
+    return dt.astimezone(UTC).date() if dt.tzinfo else dt.date()
+
+
+def usd_flow_threshold(raw: EtfFlowsRaw) -> float:
+    """A1: 0.001 × shares_outstanding × etf_close, same-session close only. Never reads price_raw."""
+    close = raw.etf_close
+    if close is None or not math.isfinite(close) or close <= 0:
+        raise EtfPriceError(f"{raw.ticker}: etf_close missing or invalid ({close!r})")
+    if raw.etf_close_date is None:
+        raise EtfPriceError(f"{raw.ticker}: etf_close_date missing")
+    flows_session = _session(raw.date, "etf_flows_raw.date")
+    close_session = _session(raw.etf_close_date, "etf_close_date")
+    if close_session != flows_session:
+        raise EtfPriceError(f"{raw.ticker}: stale etf_close ({close_session} != flows session {flows_session})")
+    return C.FLOW_THRESHOLD_COEFF * raw.shares_outstanding * close
+
+
+def normalize_flows(raw: EtfFlowsRaw, cot_bias: CotBias, flags: EngineFlags = DEFAULT_FLAGS) -> NormFlows:
+    basis: FlowThresholdBasis
+    if flags.flow_threshold_usd:
+        threshold, basis = usd_flow_threshold(raw), "usd"
+    else:
+        threshold, basis = C.FLOW_THRESHOLD_COEFF * raw.shares_outstanding, "shares_legacy"
     net_flow = raw.inflow - raw.outflow
     bias: FlowBias = "FlowLong" if net_flow > threshold else "FlowShort" if net_flow < -threshold else "Mixed"
     crowded = (bias == "FlowLong" and cot_bias in ("StrongLong", "Long")) or (
@@ -137,6 +182,7 @@ def normalize_flows(raw: EtfFlowsRaw, cot_bias: CotBias) -> NormFlows:
     return NormFlows(
         net_flow=net_flow,
         flow_threshold=threshold,
+        flow_threshold_basis=basis,
         flow_bias=bias,
         crowding="Crowded" if crowded else "NotCrowded",
     )
@@ -154,11 +200,11 @@ def normalize_price(raw: PriceRaw) -> NormPrice:
     return NormPrice(trend=trend, close=raw.close, ma20=ma.ma20, ma50=ma.ma50, ma200=ma.ma200)
 
 
-def normalize(raw: RawBundle) -> Normalized:
+def normalize(raw: RawBundle, flags: EngineFlags = DEFAULT_FLAGS) -> Normalized:
     cot = normalize_cot(raw.cot_raw)
     return Normalized(
         cot=cot,
-        gamma=normalize_gamma(raw.options_raw),
-        flows=normalize_flows(raw.etf_flows_raw, cot.bias),
+        gamma=normalize_gamma(raw.options_raw, flags),
+        flows=normalize_flows(raw.etf_flows_raw, cot.bias, flags),
         price=normalize_price(raw.price_raw),
     )

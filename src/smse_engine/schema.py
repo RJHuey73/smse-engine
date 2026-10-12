@@ -51,6 +51,10 @@ class EtfFlowsRaw(_Strict):
     inflow: float = Field(ge=0)
     outflow: float = Field(ge=0)
     shares_outstanding: float = Field(gt=0)
+    # R-02 / A1 (flagged). Ignored unless EngineFlags.flow_threshold_usd is on; validated by the
+    # normalizer, not here, so flag-off input is accepted exactly as before.
+    etf_close: float | None = None
+    etf_close_date: str | None = None
 
 
 class MovingAverages(_Strict):
@@ -87,7 +91,8 @@ Crowding = Literal["Crowded", "NotCrowded"]
 Trend = Literal["Up", "Down", "Neutral"]
 RegimePrimary = Literal["StableUp", "StableDown", "VolatileUp", "VolatileDown", "Transition"]
 RegimeRiskNote = Literal["CrowdedLong", "CrowdedShort", "Uncrowded"]
-GammaFlipSource = Literal["interpolated", "fallback"]
+GammaFlipSource = Literal["interpolated", "fallback", "unavailable"]
+FlowThresholdBasis = Literal["shares_legacy", "usd"]
 
 
 # --- Normalized intermediate (SFX-MARKET-012) -------------------------------------
@@ -106,7 +111,7 @@ class NormGamma(_Strict):
     total_gamma: float
     net_gamma: float
     regime: GammaRegime
-    gamma_flip_level: int
+    gamma_flip_level: int | None
     gamma_flip_source: GammaFlipSource
     gamma_magnets: list[int]
     volatility_note: VolatilityNote
@@ -115,6 +120,7 @@ class NormGamma(_Strict):
 class NormFlows(_Strict):
     net_flow: float
     flow_threshold: float
+    flow_threshold_basis: FlowThresholdBasis
     flow_bias: FlowBias
     crowding: Crowding
 
@@ -147,7 +153,7 @@ class SmseCot(_Strict):
 
 class SmseGamma(_Strict):
     regime: GammaRegime
-    gamma_flip_level: int
+    gamma_flip_level: int | None  # null only under the B1 flag ("no flip in chain")
     volatility_note: VolatilityNote
     gamma_magnets: list[int]
 
@@ -196,6 +202,7 @@ class ProvenanceBinding(_Strict):
     engine_version: str
     schema_version: str
     input_sha256: str
+    flags: tuple[str, ...] = ()  # active EngineFlags; non-empty means non-Canon variant output
     source_tier: Literal["sfx-t2"] = "sfx-t2"
     ratified: Literal[False] = False
 
@@ -213,7 +220,7 @@ class SummaryRow(_Strict):
     asset: str
     regime: RegimePrimary
     risk: RegimeRiskNote
-    gamma_flip_level: int
+    gamma_flip_level: int | None
     volatility: VolatilityNote
     cot_bias: CotBias
     flow_bias: FlowBias

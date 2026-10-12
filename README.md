@@ -25,10 +25,22 @@ RawBundle ─► normalize (012) ─► synthesize (011 contract) ─► registr
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                     # 65 tests: rules, contract closure, registry, reporter, JS parity
+pytest -q                     # 112 tests: rules, contract closure, registry, reporter, JS parity, flagged variants
 ruff check . && mypy src tests
 smse-engine fixtures/dryrun_2026-04-30.raw.json --timestamp 2026-04-30T21:00:00Z --date 2026-04-30 --text
 ```
+
+## Flagged variants (T0 IMPLEMENT-approved 2026-10-12, not Canon)
+
+Each one is off by default. With all three off, output is byte-identical to dry-run parity; the brief text and input digest are pinned in tests.
+
+| Flag | CLI | Ruling | Effect |
+|---|---|---|---|
+| `flow_threshold_usd` | `--flow-threshold-usd` | R-02 / A1 | Threshold = `0.001 × shares_outstanding × etf_close`. It needs `etf_flows_raw.etf_close` and a same-session `etf_close_date`. If either is missing, invalid or stale, that asset fails closed and is excluded with the reason in the trace. |
+| `null_gamma_flip` | `--null-gamma-flip` | R-04 / B1 | No sign change in the chain → `gamma_flip_level = null`, rendered "no flip in chain". |
+| `magnet_key_levels` | `--magnet-key-levels` | R-05 / C1 | Zero-GEX strikes are not magnets. Resistance = magnets strictly above close. Duplicate MA support levels collapse. |
+
+Active flags are stamped into every `ProvenanceBinding.flags`. Flipping a default needs a RATIFY ruling, an addendum and a verified registry (see `docs/T0-RULING-REQUEST-001.md` §0).
 
 ## Parity
 

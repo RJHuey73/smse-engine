@@ -96,7 +96,7 @@ keeps the asset in the brief, but it reintroduces the defect for that row.
 | A2 | Keep as ratified, and record the units mismatch as a known limitation |
 | A3 | Convert flows to shares (`net_usd / etf_close`). It needs the same price input and changes the meaning of 012 `inflow`/`outflow`. |
 
-- IMPLEMENT (flagged): [ ] A1  [ ] A1-alt  [ ] A3  [ ] none
+- IMPLEMENT (flagged): [x] A1  [ ] A1-alt  [ ] A3  [ ] none. **T0 approved 2026-10-12. Built.**
 - RATIFY (Canon): [ ] A1  [ ] A1-alt  [ ] A2  [ ] A3. *Blocked until the §0 preconditions hold.*
 
 ---
@@ -144,7 +144,7 @@ single strike, every strike exactly zero.
 | B2 | Ratify the 0.99 fallback as a named exception to "zero heuristics" |
 | B3 | Fall back to the cumulative-GEX zero crossing. This is a new rule and needs its own spec. |
 
-- IMPLEMENT (flagged): [ ] B1  [ ] B3  [ ] none
+- IMPLEMENT (flagged): [x] B1  [ ] B3  [ ] none. **T0 approved 2026-10-12. Built.**
 - RATIFY (Canon): [ ] B1  [ ] B2  [ ] B3. *Blocked until the §0 preconditions hold.*
 
 ---
@@ -199,7 +199,7 @@ already valid. RATIFY requires a 011/014 amendment stating these derivation rule
 | C2 | Ratify all dry-run formulas as they are, including the +1% / +2.5% resistance |
 | C3 | Remove `support`/`resistance` until a key-levels spec exists; keep magnets only |
 
-- IMPLEMENT (flagged): [ ] C1  [ ] C3  [ ] none
+- IMPLEMENT (flagged): [x] C1  [ ] C3  [ ] none. **T0 approved 2026-10-12. Built.**
 - RATIFY (Canon): [ ] C1  [ ] C2  [ ] C3. *Blocked until the §0 preconditions hold.*
 
 ---
@@ -213,10 +213,10 @@ already valid. RATIFY requires a 011/014 amendment stating these derivation rule
 
 | Box ticked | T1 action |
 |---|---|
-| IMPLEMENT | A separate PR per ruling: a flag (default off), the tests listed above, and a golden-parity check with the flag off. No doc changes to 011/012/014. |
+| IMPLEMENT | A flag per ruling (default off), the tests listed above, and a golden-parity check with flags off. No doc changes to 011/012/014. *As built:* all three landed in one commit on the PR #1 branch, because this session may push only to its designated branch. Each flag is independent and separately testable. |
 | RATIFY | 1. Re-run the session-open registry queries. 2. Draft the addendum, STAGED. 3. T0 approves the addendum. 4. Flip the default in a separate PR, re-baseline the golden, and add an oracle-delta test. 5. Write to the registry only on T0 auth. |
 
-**T0 signature (IMPLEMENT boxes):** ____________  **Date:** ________
+**T0 signature (IMPLEMENT boxes):** T0, A1 + B1 + C1 approved in session ("IMPLEMENT A1, B1, C1 approved — build flagged variants").  **Date:** 2026-10-12
 
 **T0 signature (RATIFY boxes):** ____________  **Date:** ________ *(not before the §0 preconditions)*
 

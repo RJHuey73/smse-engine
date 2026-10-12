@@ -33,7 +33,7 @@ The status of everything below is **STAGED**: T1 findings that await T0. Nothing
 
 1. Repo: **blocked**. The GitHub App gets a 403 on `create_repository` (same as Shadowfox-systems B-1). T0 creates `RJHuey73/smse-engine` (private, empty) by hand.
 2. Rulings: `docs/T0-RULING-REQUEST-001.md` is now rev 2 (2026-10-12), after T0's review of rev 1. It adds edge-case rules, separates IMPLEMENT (flagged) from RATIFY (Canon), and states what a signature does not cover. Awaiting T0.
-3. Flagged variant: waiting on step 2.
+3. Flagged variants: **IMPLEMENT approved by T0 for A1, B1 and C1 (2026-10-12)** and built behind default-off flags, with the full test lists from rev 2. Flag-off output is unchanged and pinned. RATIFY is still blocked by the §0 preconditions.
 4. reporterAgent.ts v1.1: not found (see evidence table). R-01 stays open, and the reporter stays provisional.
 5. Registry triage: blocked by the Airtable 429. Retry after the quota resets, and re-run the session-open queries first.
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from smse_engine import constants as C
 from smse_engine._num import js_round
+from smse_engine.flags import DEFAULT_FLAGS, EngineFlags
 from smse_engine.schema import (
     GammaRegime,
     Normalized,
@@ -31,10 +32,17 @@ def classify_regime(trend: Trend, gamma: GammaRegime) -> RegimePrimary:
     return _REGIME_MATRIX.get((trend, gamma), "Transition")
 
 
-def synthesize(asset: str, timestamp: str, norm: Normalized) -> SMSEv1:
+def synthesize(asset: str, timestamp: str, norm: Normalized, flags: EngineFlags = DEFAULT_FLAGS) -> SMSEv1:
     cot, gamma, flows, price = norm.cot, norm.gamma, norm.flows, norm.price
     risk: RegimeRiskNote = cot.risk_note if cot.risk_note != "Normal" else "Uncrowded"
-    support = sorted((js_round(price.ma50), js_round(price.ma200)), reverse=True)
+    mas = (js_round(price.ma50), js_round(price.ma200))
+    if flags.magnet_key_levels:
+        # C1: support stays MA-based (duplicates collapsed); resistance is magnets strictly above close.
+        support = sorted(set(mas), reverse=True)
+        resistance = [m for m in gamma.gamma_magnets if m > price.close]
+    else:
+        support = sorted(mas, reverse=True)
+        resistance = [js_round(price.close * k) for k in C.RESISTANCE_COEFFS]
     return SMSEv1(
         asset=asset,
         timestamp=timestamp,
@@ -55,7 +63,7 @@ def synthesize(asset: str, timestamp: str, norm: Normalized) -> SMSEv1:
         regime=SmseRegime(primary=classify_regime(price.trend, gamma.regime), risk_note=risk),
         key_levels=SmseKeyLevels(
             support=[v for v in support if v < price.close],
-            resistance=[js_round(price.close * k) for k in C.RESISTANCE_COEFFS],
+            resistance=resistance,
             gamma_magnets=list(gamma.gamma_magnets),
         ),
     )

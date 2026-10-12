@@ -24,6 +24,8 @@ INTERPRETATION: dict[RegimePrimary, str] = {
 CROWDED_LONG = " Crowded long — air-pocket risk if flows reverse."
 CROWDED_SHORT = " Crowded short — high squeeze potential."
 COT_STALE = " ⚠ COT stale (>7d) — directional bias unreliable."
+# B1 (flagged): appended after the ratified regime string, never edits it.
+NO_FLIP = " Gamma flip unavailable (no sign change in chain)."
 
 SECTIONS = (
     "Market Regime Map",
@@ -37,6 +39,8 @@ SECTIONS = (
 
 def interpret(a: SMSEv1) -> str:
     text = INTERPRETATION[a.regime.primary]
+    if a.gamma.gamma_flip_level is None:
+        text += NO_FLIP
     if a.regime.risk_note == "CrowdedLong":
         text += CROWDED_LONG
     if a.regime.risk_note == "CrowdedShort":
@@ -63,6 +67,12 @@ def _fmt(values: Sequence[int]) -> str:
     return " · ".join(f"{v:,}" for v in values) if values else "—"
 
 
+def _flip(level: int | None, *, table: bool = False) -> str:
+    if level is None:
+        return "—" if table else "— (no flip in chain)"
+    return str(level) if table else f"{level:,}"
+
+
 def _stale_mark(a: SMSEv1) -> str:
     return " ⚠ COT STALE" if a.cot.stale else ""
 
@@ -75,7 +85,7 @@ def render_text(date: str, assets: Sequence[SMSEv1], interps: dict[str, str]) ->
         ],
         "Key Levels": [
             f"{a.asset}: support {_fmt(a.key_levels.support)} | resistance {_fmt(a.key_levels.resistance)}"
-            f" | gamma magnets {_fmt(a.key_levels.gamma_magnets)} | gamma flip {a.gamma.gamma_flip_level:,}"
+            f" | gamma magnets {_fmt(a.key_levels.gamma_magnets)} | gamma flip {_flip(a.gamma.gamma_flip_level)}"
             for a in assets
         ],
         "Volatility and Liquidity": [
@@ -90,7 +100,7 @@ def render_text(date: str, assets: Sequence[SMSEv1], interps: dict[str, str]) ->
     }
     header = "asset | regime | risk | gamma_flip_level | volatility | cot_bias | flow_bias | cot_stale"
     rows = [
-        f"{r.asset} | {r.regime} | {r.risk} | {r.gamma_flip_level} | {r.volatility} | {r.cot_bias}"
+        f"{r.asset} | {r.regime} | {r.risk} | {_flip(r.gamma_flip_level, table=True)} | {r.volatility} | {r.cot_bias}"
         f" | {r.flow_bias} | {str(r.cot_stale).lower()}"
         for r in map(summary_row, assets)
     ]
