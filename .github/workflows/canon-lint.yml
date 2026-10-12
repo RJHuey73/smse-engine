@@ -1,0 +1,22 @@
+name: Canon Lint
+
+# Enforces the org-standard GitHub Actions pins (CANON-360) on every push and
+# PR. Runs the vendored, dependency-free linter from .canon/ — no cross-repo
+# access or secret required, so it can never break from private-repo
+# permissions. The single source of truth lives in
+# Shadowfox-OS-Specification-Repository/canon/; the canon-sweep there keeps this
+# vendored copy in sync.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  canon-lint:
+    name: canon lint (CANON-360)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Enforce org-standard action pins
+        run: python3 .canon/canon_lint.py --root .

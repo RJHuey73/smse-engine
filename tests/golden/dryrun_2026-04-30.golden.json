@@ -1,0 +1,165 @@
+{
+  "ES": {
+    "norm": {
+      "cot": {
+        "net": 223200,
+        "z_score": 0.18,
+        "bias": "Neutral",
+        "extreme_flag": "None",
+        "risk_note": "Normal",
+        "stale": false
+      },
+      "gamma": {
+        "total_gamma": 2034.03,
+        "net_gamma": 1016.59,
+        "regime": "LongGamma",
+        "gamma_flip_level": 5015,
+        "gamma_magnets": [
+          5100,
+          5150,
+          5200
+        ],
+        "volatility_note": "VolSuppressing"
+      },
+      "flows": {
+        "net_flow": 920000000,
+        "flow_threshold": 450000,
+        "flow_bias": "FlowLong",
+        "crowding": "NotCrowded"
+      },
+      "price": {
+        "trend": "Up",
+        "close": 5118,
+        "ma20": 5042,
+        "ma50": 4998,
+        "ma200": 4731
+      }
+    },
+    "smse": {
+      "asset": "ES",
+      "timestamp": "2026-04-30T21:00:00Z",
+      "cot": {
+        "bias": "Neutral",
+        "z_score": 0.18,
+        "extreme_flag": "None",
+        "risk_note": "Normal",
+        "stale": false
+      },
+      "gamma": {
+        "regime": "LongGamma",
+        "gamma_flip_level": 5015,
+        "volatility_note": "VolSuppressing",
+        "gamma_magnets": [
+          5100,
+          5150,
+          5200
+        ]
+      },
+      "flows": {
+        "bias": "FlowLong",
+        "crowding": "NotCrowded",
+        "flow_threshold": 450000
+      },
+      "regime": {
+        "primary": "StableUp",
+        "risk_note": "Uncrowded"
+      },
+      "key_levels": {
+        "support": [
+          4998,
+          4731
+        ],
+        "resistance": [
+          5169,
+          5246
+        ],
+        "gamma_magnets": [
+          5100,
+          5150,
+          5200
+        ]
+      }
+    },
+    "interpretation": "Trend intact. Dips likely supported unless price breaks below gamma flip."
+  },
+  "NQ": {
+    "norm": {
+      "cot": {
+        "net": -14400,
+        "z_score": -0.94,
+        "bias": "Short",
+        "extreme_flag": "None",
+        "risk_note": "Normal",
+        "stale": false
+      },
+      "gamma": {
+        "total_gamma": 102.534,
+        "net_gamma": 20.992,
+        "regime": "LongGamma",
+        "gamma_flip_level": 17823,
+        "gamma_magnets": [
+          17500,
+          18000,
+          18250
+        ],
+        "volatility_note": "VolSuppressing"
+      },
+      "flows": {
+        "net_flow": -350000000,
+        "flow_threshold": 248000,
+        "flow_bias": "FlowShort",
+        "crowding": "Crowded"
+      },
+      "price": {
+        "trend": "Down",
+        "close": 17842,
+        "ma20": 17991,
+        "ma50": 18234,
+        "ma200": 19108
+      }
+    },
+    "smse": {
+      "asset": "NQ",
+      "timestamp": "2026-04-30T21:00:00Z",
+      "cot": {
+        "bias": "Short",
+        "z_score": -0.94,
+        "extreme_flag": "None",
+        "risk_note": "Normal",
+        "stale": false
+      },
+      "gamma": {
+        "regime": "LongGamma",
+        "gamma_flip_level": 17823,
+        "volatility_note": "VolSuppressing",
+        "gamma_magnets": [
+          17500,
+          18000,
+          18250
+        ]
+      },
+      "flows": {
+        "bias": "FlowShort",
+        "crowding": "Crowded",
+        "flow_threshold": 248000
+      },
+      "regime": {
+        "primary": "VolatileDown",
+        "risk_note": "Uncrowded"
+      },
+      "key_levels": {
+        "support": [],
+        "resistance": [
+          18020,
+          18288
+        ],
+        "gamma_magnets": [
+          17500,
+          18000,
+          18250
+        ]
+      }
+    },
+    "interpretation": "Downside path with amplified volatility. Squeeze risk if flows flip."
+  }
+}
