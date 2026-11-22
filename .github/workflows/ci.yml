@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: the default token only needs to read this repo.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: test (py${{ matrix.python-version }})
