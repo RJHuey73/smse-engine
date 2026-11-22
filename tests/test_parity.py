@@ -26,7 +26,27 @@ def test_normalized_matches_dryrun(asset: str, raw_json: dict[str, Any], golden:
     norm["flows"].pop("flow_threshold_basis")
     exp = golden[asset]["norm"]
     for block in ("cot", "gamma", "flows", "price"):
-        assert norm[block] == pytest.approx(exp[block]), block
+        _assert_approx(norm[block], exp[block], block)
+
+
+def _assert_approx(actual: Any, expected: Any, path: str) -> None:
+    """Same keys and lengths, numbers within pytest.approx, everything else equal.
+
+    pytest 9 refuses pytest.approx() on a dict that holds lists (gamma_magnets),
+    so walk the structure and apply approx() to each leaf instead.
+    """
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), path
+        assert actual.keys() == expected.keys(), path
+        for key, value in expected.items():
+            _assert_approx(actual[key], value, f"{path}.{key}")
+    elif isinstance(expected, list):
+        assert isinstance(actual, list), path
+        assert len(actual) == len(expected), path
+        for i, (a, e) in enumerate(zip(actual, expected, strict=True)):
+            _assert_approx(a, e, f"{path}[{i}]")
+    else:
+        assert actual == pytest.approx(expected), path
 
 
 @pytest.mark.parametrize("asset", ["ES", "NQ"])
