@@ -11,6 +11,10 @@ on:
     branches: ["**"]
   pull_request:
 
+# Least privilege: the default token only needs to read this repo.
+permissions:
+  contents: read
+
 jobs:
   canon-lint:
     name: canon lint (CANON-360)
