@@ -44,38 +44,70 @@ EXPECTED_ACTIONS: dict[str, int] = {
     "actions/cache": 4,
 }
 
-# Matches e.g. ``uses: actions/checkout@v7`` or ``- uses: actions/checkout@v4``.
+# Matches ``uses: owner/repo@ref`` with an optional trailing ``# comment``,
+# e.g. ``uses: actions/checkout@v7`` or
+# ``uses: actions/checkout@<40-hex sha> # v7.0.1``.
 _USES_RE = re.compile(
-    r"""uses:\s*['"]?(?P<action>[A-Za-z0-9._/-]+)@v?(?P<major>[0-9]+)""",
+    r"""uses:\s*['"]?(?P<action>[A-Za-z0-9._/-]+)@(?P<ref>[^\s'"#]+)['"]?"""
+    r"""(?:\s*#\s*(?P<comment>.*))?""",
 )
+# A version-tag ref: ``v7``, ``v7.0``, ``7.0.1``.
+_TAG_REF_RE = re.compile(r"v?(?P<major>[0-9]+)(?:\.[0-9]+)*")
+# A full commit SHA. T0 interpretation of CANON-360 (DL-H, 2026-10-12): a full
+# SHA pin satisfies the canon when its trailing comment names the canon major
+# (``# v7`` or ``# v7.0.1``). The comment is the pin author's assertion; this
+# linter does not verify that the SHA belongs to that release.
+_SHA_REF_RE = re.compile(r"[0-9a-f]{40}")
+_COMMENT_MAJOR_RE = re.compile(r"v(?P<major>[0-9]+)(?:\.[0-9]+)*\b")
 
 
 class Finding:
     """A single drift finding: an action pinned off-canon."""
 
-    __slots__ = ("file", "line", "action", "found", "expected")
+    __slots__ = ("file", "line", "action", "found", "expected", "reason")
 
-    def __init__(self, file: str, line: int, action: str, found: int, expected: int):
+    def __init__(
+        self,
+        file: str,
+        line: int,
+        action: str,
+        found: int | None,
+        expected: int,
+        reason: str = "drift",
+    ):
         self.file = file
         self.line = line
         self.action = action
-        self.found = found
+        self.found = found  # None when no major can be read from the pin
         self.expected = expected
+        # "drift": wrong major. "sha_without_major_comment": a full SHA pin
+        # with no ``# vN`` comment. "unversioned_ref": a branch, short SHA or
+        # other ref that names no major.
+        self.reason = reason
 
     def as_dict(self) -> dict:
         return {
             "file": self.file,
             "line": self.line,
             "action": self.action,
-            "found": f"v{self.found}",
+            "found": None if self.found is None else f"v{self.found}",
             "expected": f"v{self.expected}",
+            "reason": self.reason,
         }
 
     def __str__(self) -> str:
-        return (
-            f"{self.file}:{self.line}: {self.action}@v{self.found} "
-            f"drifts from canon @v{self.expected}"
-        )
+        where = f"{self.file}:{self.line}: {self.action}"
+        if self.reason == "sha_without_major_comment":
+            return (
+                f"{where}: full SHA pin has no '# v{self.expected}' comment "
+                f"naming the canon major"
+            )
+        if self.reason == "unversioned_ref":
+            return (
+                f"{where}: ref names no major; pin @v{self.expected} or a full "
+                f"SHA with '# v{self.expected}'"
+            )
+        return f"{where}@v{self.found} drifts from canon @v{self.expected}"
 
 
 def scan_workflow_text(text: str, filename: str = "<workflow>") -> list[Finding]:
@@ -86,9 +118,28 @@ def scan_workflow_text(text: str, filename: str = "<workflow>") -> list[Finding]
         if not m:
             continue
         action = m.group("action")
-        major = int(m.group("major"))
         expected = EXPECTED_ACTIONS.get(action)
-        if expected is not None and major != expected:
+        if expected is None:
+            continue
+        ref = m.group("ref")
+        tag = _TAG_REF_RE.fullmatch(ref)
+        if tag:
+            major = int(tag.group("major"))
+        elif _SHA_REF_RE.fullmatch(ref):
+            cm = _COMMENT_MAJOR_RE.match(m.group("comment") or "")
+            if not cm:
+                findings.append(
+                    Finding(filename, lineno, action, None, expected,
+                            "sha_without_major_comment")
+                )
+                continue
+            major = int(cm.group("major"))
+        else:
+            findings.append(
+                Finding(filename, lineno, action, None, expected, "unversioned_ref")
+            )
+            continue
+        if major != expected:
             findings.append(Finding(filename, lineno, action, major, expected))
     return findings
 
@@ -164,7 +215,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  ✗ {f}")
             print(
                 "\nFix: bump the drifting actions to the canon versions "
-                "(see canon/CANON.md). Node 24-native majors: "
+                "(see canon/CANON.md), as @vN or a full SHA with a '# vN' "
+                "comment. Node 24-native majors: "
                 + ", ".join(f"{a}@v{v}" for a, v in EXPECTED_ACTIONS.items())
             )
 
